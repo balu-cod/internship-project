@@ -2,11 +2,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { api } from "@shared/routes";
-import { useMaterialAction, useMaterial } from "../hooks/use-inventory";
-import { Card, CardHeader, Input, Button } from "../components/UI";
+import { useMaterialAction } from "@/hooks/use-inventory";
+import { Card, CardHeader, Input, Button } from "@/components/UI";
 import { Loader2, PackagePlus } from "lucide-react";
 import { useLocation } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 // Client-side schema with coercions for number inputs
 const formSchema = api.actions.entry.input.extend({
@@ -18,27 +18,16 @@ type FormValues = z.infer<typeof formSchema>;
 export default function Entry() {
   const { entry } = useMaterialAction();
   const [location] = useLocation();
-  const [materialCode, setMaterialCode] = useState("");
-  const { data: existingMaterial } = useMaterial(materialCode);
   
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormValues>({
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       materialCode: "",
       quantity: undefined,
       rack: "",
       bin: "",
-      enteredBy: "",
     }
   });
-
-  const watchedCode = watch("materialCode");
-
-  useEffect(() => {
-    if (watchedCode && watchedCode.length >= 3) {
-      setMaterialCode(watchedCode);
-    }
-  }, [watchedCode]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -46,20 +35,14 @@ export default function Entry() {
     const rack = params.get("rack");
     const bin = params.get("bin");
 
-    if (code) {
-      setValue("materialCode", code);
-      setMaterialCode(code);
-    }
+    if (code) setValue("materialCode", code);
     if (rack) setValue("rack", rack);
     if (bin) setValue("bin", bin);
   }, [setValue]);
 
   const onSubmit = (data: FormValues) => {
     entry.mutate(data, {
-      onSuccess: () => {
-        reset();
-        setMaterialCode("");
-      }
+      onSuccess: () => reset()
     });
   };
 
@@ -104,13 +87,6 @@ export default function Entry() {
               error={errors.bin?.message}
             />
           </div>
-
-          <Input
-            label="Entered By"
-            placeholder="Your Name"
-            {...register("enteredBy")}
-            error={errors.enteredBy?.message}
-          />
 
           <div className="pt-4">
             <Button 

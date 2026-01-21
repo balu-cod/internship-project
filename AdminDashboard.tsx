@@ -1,29 +1,15 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { Card, CardHeader, Button } from "../components/UI";
-import { ShieldAlert, RotateCcw, History, AlertTriangle, LogOut, QrCode } from "lucide-react";
-import { useToast } from "../hooks/use-toast";
+import { Card, CardHeader, Button } from "@/components/UI";
+import { ShieldAlert, RotateCcw, History, AlertTriangle, LogOut } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { RackQRCode } from "../components/RackQRCode";
-import { useMaterials } from "../hooks/use-inventory";
 
 export default function AdminDashboard() {
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [showQRs, setShowQRs] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { data: materials } = useMaterials();
-
-  // Group materials by Rack and Bin
-  const rackBinGroups = materials ? materials.reduce((acc, material) => {
-    const key = `${material.rack}-${material.bin}`;
-    if (!acc[key]) acc[key] = { rack: material.rack, bin: material.bin, materials: [] };
-    acc[key].materials.push(material);
-    return acc;
-  }, {} as Record<string, { rack: string, bin: string, materials: any[] }>) : {};
-
-  const sortedKeys = Object.keys(rackBinGroups).sort();
 
   useEffect(() => {
     const auth = localStorage.getItem("admin_auth");
@@ -70,60 +56,56 @@ export default function AdminDashboard() {
           <ShieldAlert className="w-8 h-8" />
           <h1 className="text-3xl font-display font-bold uppercase tracking-tighter">System Administration</h1>
         </div>
-        <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2 text-muted-foreground hover:text-foreground">
+        <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2 text-muted-foreground hover:text-foreground">
           <LogOut className="w-4 h-4" /> Logout
         </Button>
       </div>
 
-      {/* QR Codes Section - Main Interface */}
-      <Card id="qr-codes" className="border-primary/20 bg-primary/5">
-        <div className="p-6 flex justify-between items-center">
-          <CardHeader 
-            title="Zone QR Codes" 
-            subtitle="Identification tags for inventory racks." 
-          />
-          <div className="flex gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader title="Maintenance" subtitle="System maintenance and data management." />
+          <div className="p-6 pt-0 space-y-4">
+            <div className="flex items-start gap-3 p-3 bg-secondary border border-border text-xs font-mono uppercase text-muted-foreground">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-primary" />
+              <span>System maintenance operations for authorized administrators.</span>
+            </div>
+            
             <Button 
-              variant={showQRs ? "secondary" : "primary"}
-              onClick={() => setShowQRs(!showQRs)}
-              className="gap-2"
+              variant="outline" 
+              className="w-full justify-start gap-3 border-border hover:bg-primary hover:text-black transition-colors"
+              onClick={() => handleAction("/api/materials/reset", "POST", "Reset Inventory Count")}
             >
-              <QrCode className="w-4 h-4" /> {showQRs ? "Hide" : "Display All"}
+              <RotateCcw className="w-4 h-4" /> Reset All Quantities
             </Button>
-            {showQRs && sortedKeys.length > 0 && (
-              <Button variant="outline" onClick={() => window.print()} className="hidden sm:flex gap-2">
-                Print
-              </Button>
-            )}
+
+            <Button 
+              variant="outline" 
+              className="w-full justify-start gap-3 border-border hover:bg-primary hover:text-black transition-colors"
+              onClick={() => handleAction("/api/logs", "DELETE", "Clear Audit Logs")}
+            >
+              <History className="w-4 h-4" /> Clear Activity History
+            </Button>
           </div>
-        </div>
-        
-        {showQRs && (
-          <div className="p-6 pt-0">
-            {sortedKeys.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedKeys.map(key => (
-                  <RackQRCode 
-                    key={key} 
-                    rack={rackBinGroups[key].rack} 
-                    bin={rackBinGroups[key].bin} 
-                    materials={rackBinGroups[key].materials} 
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="p-8 text-center border border-dashed border-border rounded text-muted-foreground uppercase font-mono text-xs">
-                No inventory data available to generate QR codes.
-              </div>
-            )}
-            <div className="mt-8 p-4 bg-secondary/20 border border-dashed border-border rounded text-center">
-              <p className="text-xs font-mono text-muted-foreground uppercase">
-                Dynamic QR codes generated per specific section (Rack-Bin). Scanning a code provides full visibility and access to assets in that specific area.
-              </p>
+        </Card>
+
+        <Card>
+          <CardHeader title="System Status" subtitle="Live environment metrics." />
+          <div className="p-6 pt-0 space-y-2 font-mono text-xs text-muted-foreground uppercase">
+            <div className="flex justify-between border-b border-border pb-2">
+              <span>Core Status</span>
+              <span className="text-primary font-bold">Operational</span>
+            </div>
+            <div className="flex justify-between border-b border-border py-2">
+              <span>Database</span>
+              <span>PostgreSQL / Drizzle</span>
+            </div>
+            <div className="flex justify-between py-2">
+              <span>Environment</span>
+              <span>Production-Node</span>
             </div>
           </div>
-        )}
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

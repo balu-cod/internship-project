@@ -1,47 +1,18 @@
-import { useStats, useLogs, useMaterials } from "../hooks/use-inventory";
-import { Card, CardHeader, StatMetric, Button } from "../components/UI";
-import { Package, PackagePlus, PackageMinus, Clock, Download, ChevronDown, AlertTriangle, Trash2 } from "lucide-react";
-import { format, subDays, subMonths, startOfYear, getYear, isAfter, min } from "date-fns";
+import { useStats, useLogs, useMaterials } from "@/hooks/use-inventory";
+import { Card, CardHeader, StatMetric, Button } from "@/components/UI";
+import { Package, PackagePlus, PackageMinus, Clock, Download } from "lucide-react";
+import { format } from "date-fns";
 import * as XLSX from 'xlsx';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
-import { Alert, AlertTitle, AlertDescription } from "../components/ui/alert";
-import { useAuth } from "../hooks/use-auth";
-import { useMaterialAction } from "../hooks/use-inventory";
 
 export default function Dashboard() {
   const { data: stats } = useStats();
   const { data: logs } = useLogs();
   const { data: materials } = useMaterials();
-  const { user } = useAuth();
-  const { deleteMaterial } = useMaterialAction();
 
-  const lowStockItems = materials?.filter(m => m.quantity <= 100) || [];
-
-  const exportFilteredData = (range: string) => {
+  const exportToExcel = () => {
     if (!materials) return;
-
-    const now = new Date();
-    let filterDate: Date | null = null;
-
-    if (range === '30days') filterDate = subDays(now, 30);
-    else if (range === '3months') filterDate = subMonths(now, 3);
-    else if (range === '5months') filterDate = subMonths(now, 5);
-    else if (range === '8months') filterDate = subMonths(now, 8);
-    else if (range.startsWith('year_')) {
-      const year = parseInt(range.split('_')[1]);
-      filterDate = new Date(year, 0, 1);
-    }
-
-    const filteredMaterials = filterDate 
-      ? materials.filter(m => m.lastUpdated && isAfter(new Date(m.lastUpdated), filterDate!))
-      : materials;
-
-    const worksheet = XLSX.utils.json_to_sheet(filteredMaterials.map(m => ({
+    
+    const worksheet = XLSX.utils.json_to_sheet(materials.map(m => ({
       Code: m.code,
       'Total Quantity': m.quantity,
       Rack: m.rack,
@@ -51,53 +22,19 @@ export default function Dashboard() {
     
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
-    XLSX.writeFile(workbook, `inventory_${range}_${format(new Date(), 'yyyyMMdd')}.xlsx`);
+    XLSX.writeFile(workbook, `inventory_report_${format(new Date(), 'yyyyMMdd_HHmm')}.xlsx`);
   };
-
-  const currentYear = getYear(new Date());
-  const startYear = materials && materials.length > 0 
-    ? Math.min(...materials.map(m => m.lastUpdated ? getYear(new Date(m.lastUpdated)) : currentYear))
-    : currentYear;
-  
-  const years = Array.from({ length: currentYear - Math.max(2026, startYear) + 1 }, (_, i) => Math.max(2026, startYear) + i).reverse();
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto w-full">
-      {lowStockItems.length > 0 && (
-        <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="font-display uppercase tracking-wider">Low Stock Warning</AlertTitle>
-          <AlertDescription className="font-mono text-xs">
-            The following items are at or below 100 units: {lowStockItems.map(i => i.code).join(", ")}
-          </AlertDescription>
-        </Alert>
-      )}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
         <h2 className="text-2xl sm:text-3xl font-display font-bold uppercase tracking-widest text-foreground">
           System Overview
         </h2>
         <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2 w-full sm:w-auto border-primary/50 hover:bg-primary/10">
-                <Download className="w-4 h-4" /> Export Report <ChevronDown className="w-3 h-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-card border-border font-mono text-xs uppercase">
-              <DropdownMenuItem onClick={() => exportFilteredData('30days')}>Last 30 Days</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportFilteredData('3months')}>Last 3 Months</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportFilteredData('5months')}>Last 5 Months</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportFilteredData('8months')}>Last 8 Months</DropdownMenuItem>
-              {years.map(year => (
-                <DropdownMenuItem key={year} onClick={() => exportFilteredData(`year_${year}`)}>
-                  Full Year {year}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuItem onClick={() => exportFilteredData('all')} className="text-primary font-bold">
-                All Time Data
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button onClick={exportToExcel} variant="outline" size="sm" className="gap-2 w-full sm:w-auto">
+            <Download className="w-4 h-4" /> Export Excel
+          </Button>
           <span className="text-[10px] sm:text-xs font-mono text-primary animate-pulse whitespace-nowrap">● LIVE UPDATE</span>
         </div>
       </div>
@@ -138,16 +75,13 @@ export default function Dashboard() {
                     <th className="p-4">Issued Qty</th>
                     <th className="p-4">Balance Qty</th>
                     <th className="p-4">Location</th>
-                    <th className="p-4">Entered By</th>
                     <th className="p-4">Issued By</th>
                     <th className="p-4">Last Updated (IST)</th>
-                    <th className="p-4 text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {materials?.map((m) => {
                     const lastIssueLog = stats?.recentLogs.find(l => l.materialCode === m.code && l.action === 'issue');
-                    const lastEntryLog = stats?.recentLogs.find(l => l.materialCode === m.code && l.action === 'entry');
                     const materialLogs = stats?.recentLogs.filter(l => l.materialCode === m.code) || [];
                     const totalEntered = materialLogs.filter(l => l.action === 'entry').reduce((sum, l) => sum + l.quantity, 0);
                     const totalIssued = materialLogs.filter(l => l.action === 'issue').reduce((sum, l) => sum + l.quantity, 0);
@@ -156,36 +90,19 @@ export default function Dashboard() {
                       <tr key={m.id} className="hover:bg-secondary/20 transition-colors">
                         <td className="p-4 font-bold font-display">{m.code}</td>
                         <td className="p-4 font-mono text-primary font-bold">{totalEntered || '-'}</td>
-                        <td className="p-4 font-mono text-orange-600 font-bold dark:text-orange-400">{totalIssued || '-'}</td>
+                        <td className="p-4 font-mono text-accent font-bold">{totalIssued || '-'}</td>
                         <td className="p-4 font-mono text-foreground font-bold">{m.quantity}</td>
-                        <td className="p-4 font-mono">{m.rack.toUpperCase()}-{m.bin.toUpperCase()}</td>
-                        <td className="p-4 font-mono text-xs">{lastEntryLog?.enteredBy || '-'}</td>
+                        <td className="p-4 font-mono">{m.rack}-{m.bin}</td>
                         <td className="p-4 font-mono text-xs">{lastIssueLog?.issuedBy || '-'}</td>
                         <td className="p-4 text-xs font-mono text-muted-foreground">
                           {m.lastUpdated ? format(new Date(m.lastUpdated), 'dd/MM/yyyy HH:mm') : 'N/A'}
-                        </td>
-                        <td className="p-4 text-center">
-                          <Button 
-                            size="sm" 
-                            variant="destructive" 
-                            className="h-8 px-3 gap-2 font-mono text-[10px] uppercase"
-                            onClick={() => {
-                              if (confirm(`Are you sure you want to delete material ${m.code}?`)) {
-                                deleteMaterial.mutate(m.code);
-                              }
-                            }}
-                            disabled={deleteMaterial.isPending}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Delete</span>
-                          </Button>
                         </td>
                       </tr>
                     );
                   })}
                   {(!materials || materials.length === 0) && (
                     <tr>
-                      <td colSpan={8} className="p-8 text-center text-muted-foreground">No inventory data</td>
+                      <td colSpan={7} className="p-8 text-center text-muted-foreground">No inventory data</td>
                     </tr>
                   )}
                 </tbody>
@@ -217,11 +134,11 @@ export default function Dashboard() {
                   )}
                   <div className="flex justify-between text-xs font-mono text-muted-foreground mt-1">
                      <span className="flex items-center gap-1">
-                       Loc: {log.rack.toUpperCase()}-{log.bin.toUpperCase()}
+                       Loc: {log.rack}-{log.bin}
                      </span>
                      <span className="flex items-center gap-1">
                        <Clock className="w-3 h-3" />
-                       {log.timestamp ? format(new Date(log.timestamp), 'HH:mm') : 'N/A'}
+                       {format(new Date(log.timestamp!), 'HH:mm')}
                      </span>
                   </div>
                 </div>

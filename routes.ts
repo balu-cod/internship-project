@@ -1,105 +1,109 @@
 import { z } from "zod";
+import { insertMaterialSchema, insertLogSchema, materials, logs } from "./schema";
 
-// Shared schemas for consistent validation
-export const materialSchema = z.object({
-  id: z.number(),
-  code: z.string().min(1, "Material code is required"),
-  quantity: z.number().min(0),
-  rack: z.string().min(1, "Rack is required"),
-  bin: z.string().min(1, "Bin is required"),
-  lastUpdated: z.string().optional().nullable(),
-});
+export const errorSchemas = {
+  validation: z.object({
+    message: z.string(),
+    field: z.string().optional(),
+  }),
+  notFound: z.object({
+    message: z.string(),
+  }),
+  internal: z.object({
+    message: z.string(),
+  }),
+  conflict: z.object({
+    message: z.string(),
+  }),
+};
 
-export const logSchema = z.object({
-  id: z.number(),
-  materialCode: z.string(),
-  action: z.enum(["entry", "issue"]),
-  quantity: z.number(),
-  rack: z.string(),
-  bin: z.string(),
-  issuedBy: z.string().optional().nullable(),
-  enteredBy: z.string().optional().nullable(),
-  balanceQty: z.number(),
-  timestamp: z.string().optional().nullable(),
-});
-
-export const statsSchema = z.object({
-  totalMaterials: z.number(),
-  enteredToday: z.number(),
-  issuedToday: z.number(),
-  recentLogs: z.array(logSchema),
-});
-
-// API Route Definitions
 export const api = {
   materials: {
     list: {
+      method: "GET" as const,
       path: "/api/materials",
-      method: "GET",
+      input: z.object({
+        search: z.string().optional(),
+      }).optional(),
       responses: {
-        200: z.array(materialSchema)
-      }
+        200: z.array(z.custom<typeof materials.$inferSelect>()),
+      },
     },
     get: {
+      method: "GET" as const,
       path: "/api/materials/:code",
-      method: "GET",
       responses: {
-        200: materialSchema
-      }
+        200: z.custom<typeof materials.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
     },
-    delete: {
-      path: "/api/materials/:code",
-      method: "DELETE"
-    }
   },
   actions: {
     entry: {
+      method: "POST" as const,
       path: "/api/actions/entry",
-      method: "POST",
       input: z.object({
-        materialCode: z.string().min(1, "Code required"),
-        quantity: z.number().min(1, "Quantity must be > 0"),
-        rack: z.string().min(1, "Rack required"),
-        bin: z.string().min(1, "Bin required"),
-        enteredBy: z.string().min(1, "Name required"),
-      })
+        materialCode: z.string().min(1, "Material Code is required"),
+        quantity: z.number().positive("Quantity must be positive"),
+        rack: z.string().min(1, "Rack is required"),
+        bin: z.string().min(1, "Bin is required"),
+      }),
+      responses: {
+        200: z.custom<typeof materials.$inferSelect>(), // Returns updated material
+        201: z.custom<typeof materials.$inferSelect>(), // Returns new material
+        400: errorSchemas.validation,
+      },
     },
     issue: {
+      method: "POST" as const,
       path: "/api/actions/issue",
-      method: "POST",
       input: z.object({
-        materialCode: z.string().min(1, "Code required"),
-        quantity: z.number().min(1, "Quantity must be > 0"),
-        rack: z.string().min(1, "Rack required"),
-        bin: z.string().min(1, "Bin required"),
-        issuedBy: z.string().min(1, "Name required"),
-      })
-    }
+        materialCode: z.string().min(1, "Material Code is required"),
+        quantity: z.number().positive("Quantity must be positive"),
+        rack: z.string().min(1, "Rack is required"), // Validation: Must match stored location
+        bin: z.string().min(1, "Bin is required"),   // Validation: Must match stored location
+        issuedBy: z.string().min(1, "Issued Person Name is required"),
+      }),
+      responses: {
+        200: z.custom<typeof materials.$inferSelect>(),
+        400: errorSchemas.validation, // Insufficient stock or wrong location
+        404: errorSchemas.notFound,
+      },
+    },
   },
   logs: {
     list: {
+      method: "GET" as const,
       path: "/api/logs",
-      method: "GET",
       responses: {
-        200: z.array(logSchema)
-      }
-    }
+        200: z.array(z.custom<typeof logs.$inferSelect>()),
+      },
+    },
   },
   stats: {
     get: {
+      method: "GET" as const,
       path: "/api/stats",
-      method: "GET",
       responses: {
-        200: statsSchema
-      }
-    }
-  }
+        200: z.object({
+          totalMaterials: z.number(),
+          enteredToday: z.number(),
+          issuedToday: z.number(),
+          recentLogs: z.array(z.custom<typeof logs.$inferSelect>()),
+        }),
+      },
+    },
+  },
 };
 
-export function buildUrl(path: string, params: Record<string, string>) {
+export function buildUrl(path: string, params?: Record<string, string | number>): string {
   let url = path;
-  for (const [key, value] of Object.entries(params)) {
-    url = url.replace(`:${key}`, encodeURIComponent(value));
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (url.includes(`:${key}`)) {
+        url = url.replace(`:${key}`, String(value));
+      }
+    });
   }
   return url;
 }

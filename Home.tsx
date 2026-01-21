@@ -23,27 +23,39 @@ const menuItems = [
     icon: PackageMinus, 
     path: "/issue", 
     desc: "Disburse materials for production",
-    color: "text-primary border-primary hover:bg-primary/10"
+    color: "text-accent border-accent hover:bg-accent/10"
   },
   { 
     title: "Search", 
     icon: Search, 
     path: "/search", 
     desc: "Locate inventory items",
-    color: "text-primary border-primary hover:bg-primary/10"
+    color: "text-foreground border-border hover:border-foreground/50 hover:bg-secondary"
   },
   { 
     title: "Dashboard", 
     icon: BarChart2, 
     path: "/dashboard", 
     desc: "View analytics and logs",
-    color: "text-primary border-primary hover:bg-primary/10"
+    color: "text-foreground border-border hover:border-foreground/50 hover:bg-secondary"
   },
 ];
 
 export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh]">
+      <div className="text-center mb-12 space-y-4">
+        <div className="inline-flex items-center justify-center p-4 bg-primary/10 border border-primary/20 rounded-full mb-4">
+          <ShieldAlert className="w-12 h-12 text-primary" />
+        </div>
+        <h1 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-widest text-foreground glow-text">
+          TRIMS<span className="text-primary">.SYS</span>
+        </h1>
+        <p className="font-mono text-muted-foreground tracking-wider uppercase text-sm md:text-base">
+          Tactical Resource Inventory Management System
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
         {menuItems.map((item, index) => (
           <Link key={item.path} href={item.path}>

@@ -48,7 +48,6 @@ function updateUserSession(
   user.access_token = tokens.access_token;
   user.refresh_token = tokens.refresh_token;
   user.expires_at = user.claims?.exp;
-  user.isAdmin = user.claims?.email === "jaswanth@replit.com" || user.claims?.email === "admin@replit.com" || user.claims?.roles?.includes("admin");
 }
 
 async function upsertUser(claims: any) {

@@ -2,8 +2,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { api } from "@shared/routes";
-import { useMaterialAction, useMaterial } from "../hooks/use-inventory";
-import { Card, CardHeader, Input, Button } from "../components/UI";
+import { useMaterialAction, useMaterial } from "@/hooks/use-inventory";
+import { Card, CardHeader, Input, Button } from "@/components/UI";
 import { Loader2, PackageMinus, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
@@ -138,7 +138,8 @@ export default function Issue() {
           <div className="pt-4">
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full border-accent text-accent hover:bg-accent hover:text-white"
+              variant="outline"
               disabled={issue.isPending}
             >
               {issue.isPending ? (

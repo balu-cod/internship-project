@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Card, CardHeader, Input, Button } from "../components/UI";
+import { Card, CardHeader, Input, Button } from "@/components/UI";
 import { ShieldAlert, Loader2, Lock } from "lucide-react";
-import { useToast } from "../hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -16,7 +16,7 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     // Hardcoded as requested
-    if (username === "admin" && password === "12345") {
+    if (username === "admin" && password === "secret") {
       localStorage.setItem("admin_auth", "true");
       toast({
         title: "Access Granted",
