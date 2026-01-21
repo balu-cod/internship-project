@@ -1,0 +1,154 @@
+Act as a senior enterprise UX architect, emergency-system designer, and full-stack engineer.
+Build a mission-critical Trims Inventory Management Website optimized for speed, clarity, and error-free operation under emergency conditions.
+GLOBAL DESIGN RULES (STRICT)
+Use only standard functional symbols:
++ for Entry
+− for Issue
+Magnifying glass (standard search icon) for Search
+Line-based Home icon (white outline only)
+No emojis, no cartoon icons
+Flat design, line icons only
+High-contrast industrial UI
+Every action must be visually obvious
+Maximum 2 clicks to reach any function
+All pages controlled by one Administrator Panel
+WEBSITE STRUCTURE
+Multi-page system
+Centralized Admin control
+Symbol-based navigation bar
+Emergency-friendly layout
+1. HOME PAGE (SYMBOL NAVIGATION HUB)
+Purpose
+Primary access page for all operations.
+Layout
+Clean grid layout
+Large symbols with short labels below
+White line-style icons on dark background
+Navigation Symbols
+Symbol
+Function
+⌂ (white outline)
+Home
++
+Material Entry
+−
+Material Issue
+🔍 (standard search icon)
+Search
+📊 (line-style chart icon)
+Dashboard
+⚙ (line-style gear icon)
+Admin
+Symbols must be bold, centered, and clickable
+Home Page Text
+TRIMS INVENTORY MANAGEMENT SYSTEM
+Emergency-Ready | Centralized Control | Real-Time Visibility
+2. ENTRY PAGE ( + MATERIAL ENTRY )
+Purpose
+Fast and accurate material entry.
+Input Fields
+Material Code (text)
+Quantity (numeric)
+Location
+Location Input Structure
+Two clearly separated inputs:
+Rack
+Dropdown / input
+Values: A1, A2, B1, B2, etc.
+Bin
+Numeric input
+Range: 01–84
+Actions
++ Save Entry (primary button)
+Reset
+Home ⌂
+Rules
+Mandatory validation
+Duplicate warning
+Instant success confirmation
+3. ISSUE PAGE ( − MATERIAL ISSUE )
+Purpose
+Controlled issuing of inventory.
+Fields
+Material Code
+Quantity to issue
+Location (Rack + Bin)
+Actions
+− Issue Material
+Cancel
+Home ⌂
+System Logic
+Prevent issuing more than available quantity
+Log every issue action with timestamp
+4. SEARCH PAGE ( 🔍 SEARCH )
+Purpose
+Quick inventory lookup.
+Search Bar
+Single wide search input
+Search by:
+Material Code
+Rack
+Bin
+Quantity
+Controls
+Search icon inside input (static)
+Clear search
+Home ⌂
+Recent Activity Section
+Appears below search bar
+Shows last entered & issued materials
+Displays:
+Material Code
+Action (+ / −)
+Location
+Time
+5. DASHBOARD PAGE (OPERATION OVERVIEW)
+Purpose
+Real-time inventory monitoring.
+Dashboard Metrics
+Total Materials Available
+Entered Today (+)
+Issued Today (−)
+Recent Activity
+Activity Log Table
+Material Code
+Action (+ / −)
+Quantity
+Location
+Date & Time
+6. ADMIN PANEL (SINGLE CONTROLLER)
+Purpose
+Central authority over entire system.
+Admin Capabilities
+User & role management
+Rack / Bin configuration
+Audit trail
+Emergency lock mode
+Data backup & export
+Navigation
+Fixed sidebar
+Line-style symbols only
+No hidden menus
+UI & VISUAL STYLE
+Theme:
+Dark background
+White line icons
+High contrast buttons
+Typography:
+Clean sans-serif
+Icons:
+Line-based SVG icons only
+No animations unless functional
+PERFORMANCE & RELIABILITY
+Fast loading
+Error-proof forms
+Offline-friendly warnings
+Auto-save prevention for data loss
+FINAL EXPECTATION
+Generate a professional, emergency-ready inventory management website using:
++ for entry
+− for issuing
+Standard search icon
+White line-style home icon
+Centralized admin control
+Clean, reliable UI

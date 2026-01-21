@@ -7,8 +7,7 @@ import {
   Search, 
   BarChart2, 
   LogOut,
-  ShieldAlert,
-  QrCode
+  ShieldAlert
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
@@ -45,21 +44,17 @@ export function Layout({ children }: LayoutProps) {
     { icon: PackagePlus, label: "Entry", path: "/entry" },
     { icon: PackageMinus, label: "Issue", path: "/issue" },
     { icon: Search, label: "Search", path: "/search" },
-    { icon: BarChart2, label: "Dashboard", path: "/dashboard" },
-    ...(isAdmin ? [{ icon: QrCode, label: "QR Manager", path: "/admin/dashboard" }] : []),
+    { icon: BarChart2, label: "Stats", path: "/dashboard" },
   ];
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-primary selection:text-primary-foreground">
-      {/* Top Navigation Bar */}
-      <header className="h-16 border-b border-border bg-white/80 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between px-6 lg:px-12 shadow-sm">
+      {/* Top Navigation Bar (Always Visible) */}
+      <header className="h-20 border-b border-border bg-card/30 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between px-6 lg:px-12">
         <div className="flex items-center gap-8">
           <Link href="/">
-            <div className="flex items-center gap-2 cursor-pointer group">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <BarChart2 className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-bold text-lg tracking-tight text-foreground">TrimsInventory</span>
+            <div className="flex items-center gap-3 cursor-pointer group">
+              <span className="font-display font-bold text-xl tracking-wider text-primary hidden sm:block">TRIMS.SYS</span>
             </div>
           </Link>
 
@@ -68,18 +63,18 @@ export function Layout({ children }: LayoutProps) {
               const isActive = location === item.path;
               const Icon = item.icon;
               return (
-                <Link key={item.path} href={item.path} className="px-3 py-2 relative group">
+                <Link key={item.path} href={item.path} className="px-4 py-2 relative group">
                   <div className={clsx(
                     "flex items-center gap-2 transition-all duration-200",
                     isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}>
                     <Icon className="w-4 h-4" />
-                    <span className="text-sm font-medium tracking-tight">{item.label}</span>
+                    <span className="text-xs font-mono uppercase tracking-tight">{item.label}</span>
                   </div>
                   {isActive && (
                     <motion.div 
                       layoutId="nav-underline"
-                      className="absolute bottom-[-20px] left-0 right-0 h-0.5 bg-primary"
+                      className="absolute bottom-[-24px] left-0 right-0 h-0.5 bg-primary shadow-[0_0_10px_rgba(250,204,21,0.5)]"
                     />
                   )}
                 </Link>
@@ -96,7 +91,7 @@ export function Layout({ children }: LayoutProps) {
                 <span className="text-[10px] font-mono text-primary font-bold tracking-widest uppercase">ADMIN</span>
               </div>
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 size="sm" 
                 onClick={handleLogout}
                 className="gap-2 text-muted-foreground hover:text-destructive transition-colors"
@@ -111,12 +106,15 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Main Content Area */}
       <main className="flex-1 relative overflow-x-hidden">
-        <div className="relative z-10 p-4 md:p-8 lg:p-10 max-w-7xl mx-auto min-h-[calc(100vh-4rem)] flex flex-col pb-24 md:pb-12">
+        {/* Background Grid Decoration */}
+        <div className="absolute inset-0 pointer-events-none opacity-20 scanlines z-0" />
+        
+        <div className="relative z-10 p-4 md:p-8 lg:p-12 max-w-7xl mx-auto min-h-[calc(100vh-5rem)] flex flex-col pb-24 md:pb-12">
           <motion.div
             key={location}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             className="flex-1 flex flex-col"
           >
             {children}

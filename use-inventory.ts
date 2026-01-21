@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
-import { useToast } from "./use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
 // Types derived from schema via api
@@ -61,13 +61,12 @@ export function useMaterialAction() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [api.materials.list.path] });
-      queryClient.invalidateQueries({ queryKey: [api.materials.get.path, data.code] });
-      queryClient.invalidateQueries({ queryKey: [`/api/materials/${data.code}/transactions`] });
       queryClient.invalidateQueries({ queryKey: [api.stats.get.path] });
       queryClient.invalidateQueries({ queryKey: [api.logs.list.path] });
       toast({
         title: "Material Entered",
         description: `Added ${data.quantity} units to ${data.code}`,
+        className: "border-primary text-primary-foreground bg-secondary",
       });
     },
     onError: (error: Error) => {
@@ -98,22 +97,12 @@ export function useMaterialAction() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [api.materials.list.path] });
-      queryClient.invalidateQueries({ queryKey: [api.materials.get.path, data.code] });
-      queryClient.invalidateQueries({ queryKey: [`/api/materials/${data.code}/transactions`] });
       queryClient.invalidateQueries({ queryKey: [api.stats.get.path] });
       queryClient.invalidateQueries({ queryKey: [api.logs.list.path] });
-      
-      if (data.quantity <= 100) {
-        toast({
-          title: "Low Stock Alert",
-          description: `${data.code} is now at ${data.quantity} units!`,
-          variant: "destructive",
-        });
-      }
-
       toast({
         title: "Material Issued",
         description: `Issued units from ${data.code}. Remaining: ${data.quantity}`,
+        className: "border-accent text-accent-foreground bg-secondary",
       });
     },
     onError: (error: Error) => {
@@ -125,40 +114,7 @@ export function useMaterialAction() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (code: string) => {
-      const url = buildUrl(api.materials.delete.path, { code });
-      const res = await fetch(url, {
-        method: api.materials.delete.method,
-        credentials: "include",
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Delete failed");
-      }
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.materials.list.path] });
-      queryClient.invalidateQueries({ queryKey: [api.stats.get.path] });
-      toast({
-        title: "Material Deleted",
-        description: "The inventory record has been removed.",
-        className: "border-primary text-primary-foreground bg-secondary",
-      });
-      // Automatically refresh the page as requested
-      window.location.reload();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Delete Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  return { entry: entryMutation, issue: issueMutation, deleteMaterial: deleteMutation };
+  return { entry: entryMutation, issue: issueMutation };
 }
 
 export function useLogs() {
